@@ -1,144 +1,97 @@
-#文字の検索
-def find_position(arr,val)
-  (0..S-1).each do |i|
-    (0..S-1).each do |j|
-      if arr[i][j] == val
-        return i,j
-      end
-    end
-  end
-  return nil,nil
+def display(card)
+  puts card.map{|line| line.join(" ")}
 end
-
-def bingo_row(hantei,i0,j0)
-  (0..S-1).each do |j|
-  #1つでも0ならNO
-    if hantei[i0][j] == 0
-      return false
-    end
-  end
-#全て1の場合、YES
-  (0..S-1).each do |j|
-  #全てに☆を付ける
-  hantei[i0][j] = "☆" + hantei[i0][j]
-  end
-  return true
-end
-#横のビンゴ判定
-
-
-def bingo_col(hantei,i0,j0)
-  (0..S-1).each do |i|
-  #1つでも0ならNO
-    if hantei[i][j0] == 0
-      return false
-    end
-  end
-  #全て1の場合、YES
-  (0..S-1).each do |j|
-  #全てに☆を付ける
-  hantei[i0][j] = "☆" + hantei[i0][j]
-  end
-  return true
-end
-
-def bingo_down(hantei,i0,j0)
-  if i0 != j0
-    return false
-  end
-  (0..S-1).each do |i|
-    j = i
-    #1つでも0ならNO
-    if hantei[i][j] == 0
-      return false
-    end
-  end
-#全て1の場合、YES
- (0..S-1).each do |j|
-  #全てに☆を付ける
-  hantei[i0][j] = "☆" + hantei[i0][j]
-  end
-return true
-end
-
-
-def bingo_up(hantei,i0,j0)
-(0..S-1).each do |i|
-j = S-1-i
-#1つでも0ならNO
-if hantei[i][j] == 0
-return false
-end
-end
-#全て1の場合、YES
- (0..S-1).each do |j|
-  #全てに☆を付ける
-  hantei[i0][j] = "☆" + hantei[i0][j]
-  end
-return true
-end
-
 S = gets.to_i
-word_arr = Array.new(S)
-data = [*'a'..'z', *'0'..'9']
-(0..S-1).each do |i|
-  ar = Array.new(S){data.sample(4).join}
-  word_arr[i] = ar
-end
+# ビンゴカードの入力
+bingo_card = Array.new(S){ gets.split}
+word_list  = bingo_card.flatten
 
-(0..S-1).each do |i|
-  (0..S-1).each do |j|
-    printf("%s ",word_arr[i][j])
-  end
-  printf("\n")
-end
+### 当選ワードの入力 ###
 
 N = gets.to_i
-word_arr_flat = word_arr.flatten
-word_n = word_arr_flat.sample(N)
-puts word_n
+hit_words = Array.new(N){ gets.chomp }
 
-
-hantei = Array.new(S)
-(0..S-1).each do |i|
-  ar = Array.new(S,0)
-  hantei[i] = ar
-end
-ctr = 0
-word_n.each do |val|
-  i,j = find_position(word_arr,val)
-  if i == nil
-    printf("バグのため終了\n")
-    exit 10
+hit_list = Array.new(S*S)
+hit_words.each do |hit|
+  if ix = word_list.find_index(hit)
+    hit_list[ix] = true
   end
-  hantei[i][j] = val
-  # 以下４つのビンゴ判定（４つのメソッドをつくったほうがよいかと思います）
-  ret = bingo_row(hantei,i,j)
-    if ret == true
-      printf("YeS1\n")
-      ctr += 1
-      break
-    end
-  ret = bingo_col(hantei,i,j)
-    if ret == true
-      printf("YeS2\n")
-      ctr += 1
-      break
-    end
-  ret = bingo_down(hantei,i,j)
-    if ret == true
-      printf("YeS3\n")
-      ctr += 1
-      break
-    end
-  ret = bingo_up(hantei,i,j)
-    if ret == true
-      printf("YeS4\n")
-      ctr += 1
-      break
-    end
 end
-if ctr == 0
-  printf("NO\n")
+
+hit_card = hit_list.each_slice(S).to_a
+# pp hit_card # DEBUG: デバッグ用なので不要なら消す
+
+### ビンゴ判定 ###
+# 斜め判定
+naname1 = Array.new(S){|i| hit_card[i][i] }.all?
+naname2 = Array.new(S){|i| hit_card[i][-i-1] }.all?
+# 横判定
+yoko = hit_card.any?(&:all?)
+# 縦判定
+tate = hit_card.transpose.any?(&:all?)
+# 結果出力
+def validate_word(word_list,hit_words)
+  if (/\A[a-zA-Z0-9]+\z/.match?(word_list)) && (/\A[a-zA-Z0-9]+\z/.match?(hit_words))
+    return true
+  else
+    puts "no1"
+    return false
+  end
 end
-pp hantei
+def validate_uniq(word_list)
+  if (word_list.size - word_list.uniq.size) == 0
+    return true
+  else
+    puts "no"
+    return false
+  end
+end
+def validate_s
+  if (3 <= S )|| (S <= 1000)
+    return true
+  else
+    puts "no"
+    return false
+  end
+end
+def validate_n
+  if (1 <= N ) || (N <= 2000)
+    return true
+  else
+    puts "no"
+    return false
+  end
+end
+def validate_word_list(word_list)
+  if (1 <= word_list[1].chars.size) && (word_list[1].chars.size <= 100)
+
+    return true
+  else
+    puts "no"
+    return false
+  end
+end
+def validate_hit_word(hit_words)
+  if (hit_words.size - hit_words.uniq.size) == 0
+   return true
+  else
+    puts "no"
+    return false
+  end
+end
+
+if yoko || tate || naname1 || naname2
+	if validate_word(word_list,hit_words) && validate_uniq(word_list) && validate_s && validate_n && validate_word_list(word_list) && validate_hit_word(hit_words)
+    puts "yes"
+  else
+    puts "no"
+  end
+else
+  puts "no"
+end
+pp word_list
+pp word_list.size
+pp word_list.uniq.size
+
+bingo_card = word_list.each_slice(S).to_a
+display(bingo_card)
